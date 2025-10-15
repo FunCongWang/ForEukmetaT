@@ -1,0 +1,101 @@
+---
+title: "Untitled"
+output: html_document
+date: "2024-10-28"
+---
+
+```{r}
+#setwd("D://Rworking//CFB.metaomics//submission")
+#calculate
+library(readxl)
+rm(list = ls())
+load("data/meta_omics_forest.RData")
+
+#env
+library(raster)
+library(geodata)
+
+#climate<-geodata::worldclim_global("bio",res = "2.5",path = "data")
+#saveRDS(climate,file = "worldclimate.rds")
+climate<-readRDS("data/worldclimate.rds")
+site<-metadata[,c(4,3)]
+climate.bio<-raster::extract(climate,site)
+
+metadata$MAT<-climate.bio$wc2.1_2.5m_bio_1
+metadata$MAP<-climate.bio$wc2.1_2.5m_bio_12
+metadata$Temp.season<-climate.bio$wc2.1_2.5m_bio_4
+metadata$Perc.season<-climate.bio$wc2.1_2.5m_bio_15
+
+#group
+library(readxl)
+#forest_type<-read_excel("data/group.xlsx")
+forest_type<-read_excel("data/group.xlsx",sheet = "Sheet2")
+metadata<-merge(metadata,forest_type,by="Site")
+metadata$Forest_type<-factor(metadata$Forest_type,levels = c("Tropical forest","Subtropical forest","Karst forest","Montane forest","Temperate forest"))
+metadata<-metadata[order(metadata$sample_name),]
+rownames(metadata)<-metadata$sample_name
+
+#rarefy
+library(vegan)
+sort(rowSums(fungi_asv))
+fungi_asv0<-data.frame(rrarefy(fungi_asv,sample = 20563))
+sort(rowSums(fungi_asv0))
+
+sort(rowSums(fungi_tsp_taxa))
+fungi_tsp_taxa0<-data.frame(rrarefy(fungi_tsp_taxa,sample = 720756))
+sort(rowSums(fungi_tsp_taxa0))
+
+#richness
+#rownames(fungi_asv0) == metadata$sample_name
+metadata$fungi_richness<-vegan::specnumber(fungi_asv0)
+
+#rownames(fungi_tsp_taxa0) == metadata$sample_name
+metadata$fungi_richness.tsp<-vegan::specnumber(fungi_tsp_taxa0)
+
+#rownames(fungi_tsp.ko) == metadata$sample_name
+metadata$fungi_ko.s<-vegan::specnumber(fungi_tsp.ko)
+
+#rownames(fungi_tsp.cazy) == metadata$sample_name
+metadata$fungi_cazy.s<-vegan::specnumber(fungi_tsp.cazy)
+
+#rownames(fungi_tsp.cog) == metadata$sample_name
+metadata$fungi_cog.s<-vegan::specnumber(fungi_tsp.cog)
+
+#rownames(fungi_tsp.kog) == metadata$sample_name
+metadata$fungi_kog.s<-vegan::specnumber(fungi_tsp.kog)
+
+#shannon
+#rownames(fungi_asv0) == metadata$sample_name
+vegan::diversity()
+metadata$fungi_shannon<-vegan::diversity(fungi_asv0,index = "shannon")
+
+#rownames(fungi_tsp_taxa0) == metadata$sample_name
+metadata$fungi_shannon.tsp<-vegan::diversity(fungi_tsp_taxa0,index = "shannon")
+
+#rownames(fungi_tsp.ko) == metadata$sample_name
+metadata$fungi_ko.H<-vegan::diversity(fungi_tsp.ko,index = "shannon")
+
+#rownames(fungi_tsp.cazy) == metadata$sample_name
+metadata$fungi_cazy.H<-vegan::diversity(fungi_tsp.cazy,index = "shannon")
+
+#rownames(fungi_tsp.cog) == metadata$sample_name
+metadata$fungi_cog.H<-vegan::diversity(fungi_tsp.cog,index = "shannon")
+
+#rownames(fungi_tsp.kog) == metadata$sample_name
+metadata$fungi_kog.H<-vegan::diversity(fungi_tsp.kog,index = "shannon")
+
+library(cols4all)
+#c4a_gui()
+my_col<-c4a('palette36',36)
+
+my_col2<-c("#FBE426","#d8b365","#e66101","#b2abd2","#3283FE")
+
+my_col3<-c("#7F3C8D", "#11A579", "#3969AC", "#F2B701", "#E73F74", "#80BA5A", 
+           "#E68310","#008695","#A5AA99","#B5EFB5", "#66B0FF", "#CF1C90",
+           "#F97B72", "#4B4B8F")
+
+```
+
+## R Markdown
+
+
